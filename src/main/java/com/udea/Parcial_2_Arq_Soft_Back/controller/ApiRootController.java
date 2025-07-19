@@ -3,48 +3,39 @@ package com.udea.Parcial_2_Arq_Soft_Back.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.hateoas.RepresentationModel;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
-@RequestMapping("/api")
 @Slf4j
 @Tag(name = "API Root", description = "Punto de entrada principal de la API")
 @CrossOrigin(origins = "*")
 public class ApiRootController {
 
-    @GetMapping
+    @GetMapping(value = {"/api", "/api/"})  // Ambas variantes
     @Operation(summary = "API Root",
-            description = "Punto de entrada principal con enlaces HATEOAS a todos los recursos")
-    public ResponseEntity<ApiRootResponse> root() {
+            description = "Punto de entrada principal con enlaces a todos los recursos")
+    public ResponseEntity<Map<String, Object>> root() {
         log.info("GET /api - Acceso al root de la API");
 
-        ApiRootResponse response = new ApiRootResponse();
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "API de Historias Clínicas - Hospital UdeA");
+        response.put("version", "v1.0");
+        response.put("description", "API RESTful para gestión de historias clínicas hospitalarias");
 
-        response.add(linkTo(methodOn(ApiRootController.class).root()).withSelfRel());
-        response.add(linkTo(methodOn(PacienteController.class).getAllPacientes()).withRel("pacientes")
-                .withTitle("Gestión de pacientes"));
-        response.add(linkTo(methodOn(DoctorController.class).getAllDoctores()).withRel("doctores")
-                .withTitle("Gestión de doctores"));
-        response.add(linkTo(methodOn(HistoriaClinicaController.class).getAllHistoriasClinicas()).withRel("historias-clinicas")
-                .withTitle("Gestión de historias clínicas"));
+        // Enlaces simples sin HATEOAS complejo
+        Map<String, String> endpoints = new HashMap<>();
+        endpoints.put("doctores", "http://localhost:8080/api/doctores");
+        endpoints.put("pacientes", "http://localhost:8080/api/pacientes");
+        endpoints.put("historias_clinicas", "http://localhost:8080/api/historias-clinicas");
+        endpoints.put("swagger_ui", "http://localhost:8080/swagger-ui.html");
+        endpoints.put("api_docs", "http://localhost:8080/v3/api-docs");
+
+        response.put("_links", endpoints);
 
         return ResponseEntity.ok(response);
-    }
-
-    static class ApiRootResponse extends RepresentationModel<ApiRootResponse> {
-        private final String message = "API de Historias Clínicas - Hospital UdeA";
-        private final String version = "v1.0";
-        private final String description = "API RESTful para gestión de historias clínicas hospitalarias";
-
-        public String getMessage() { return message; }
-        public String getVersion() { return version; }
-        public String getDescription() { return description; }
     }
 }
